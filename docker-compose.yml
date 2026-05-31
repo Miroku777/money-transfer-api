@@ -1,0 +1,19 @@
+version: '3'
+services:
+  postgres:
+    image: postgres
+    container_name: postgresMoneyTransfer
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: money_transfer
+
+  redis:
+    image: redis:7-alpine
+    container_name: redisMoneyTransfer
+    command: redis-server --port 6379
+    ports:
+      - "6379:6379"
