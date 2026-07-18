@@ -17,5 +17,8 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
+      - name: Make mvnw executable
+        run: chmod +x mvnw
+
       - name: Run all tests
         run: ./mvnw clean test
