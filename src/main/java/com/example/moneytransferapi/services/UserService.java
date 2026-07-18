@@ -15,6 +15,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +49,7 @@ public class UserService {
             log.info("User authenticated: {}", user.getId());
             return user.getId();
         }
-        throw new RuntimeException("Invalid credentials");
+        throw new BadCredentialsException("Invalid credentials");
     }
 
     @Cacheable(value = "users", key = "{#name, #email, #phone, #dateOfBirth, #page, #size}")
@@ -168,7 +169,7 @@ public class UserService {
         if (!phoneData.getUser().getId().equals(userId)) {
             throw new RuntimeException("Not your phone");
         }
-        phoneDataRepository.deleteByUserIdAndPhoneId(userId, phoneId);
+        phoneDataRepository.delete(phoneData);
         log.info("Phone deleted for user: {}", userId);
     }
 }

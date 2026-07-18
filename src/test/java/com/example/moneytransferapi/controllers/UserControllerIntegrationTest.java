@@ -18,9 +18,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -37,11 +40,17 @@ class UserControllerIntegrationTest {
             .withUsername("postgres")
             .withPassword("password");
 
+    @Container
+    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+            .withExposedPorts(6379);
+
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", () -> redis.getMappedPort(6379));
     }
 
     @Autowired
@@ -73,9 +82,9 @@ class UserControllerIntegrationTest {
         userRepository.deleteAll();
 
         testUser = new User();
-        testUser.setName("user");
+        testUser.setName("User");
         testUser.setDateOfBirth(LocalDate.of(2026, 5, 30));
-        testUser.setPassword(passwordEncoder.encode("password"));
+        testUser.setPassword(passwordEncoder.encode("User_password"));
         testUser = userRepository.save(testUser);
 
         Account account = new Account();
@@ -103,11 +112,11 @@ class UserControllerIntegrationTest {
     void searchUsersByNameReturnsUsers() throws Exception {
         mockMvc.perform(get("/api/v1/users/search")
                         .header("Authorization", "Bearer " + getValidToken())
-                        .param("name", "user")
+                        .param("name", "User")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("user"));
+                .andExpect(jsonPath("$.content[0].name").value("User"));
     }
 
     @Test
